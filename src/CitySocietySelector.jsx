@@ -4,7 +4,7 @@
 // import ChartComponent from "./ChartComponent";
 
 // // const citiesData = {
-  
+
 // // };
 
 // // const SocietyDropdown = ({ city, onSelect }) => {
@@ -52,7 +52,7 @@
 //       .then((response) => {
 //         const parsedCsvData = parseCSV(response.data);
 //         const uniqueCities = getUniqueCityNames(parsedCsvData);
-        
+
 //         setCityList(uniqueCities);
 //         setCsvData(parsedCsvData); // Set the fetched data in the component's state
 //       })
@@ -70,7 +70,7 @@
 //       const rowObject = {};
 //       for (let j = 0; j < headers.length; j++) {
 //         rowObject[headers[j]] = rowData[j];
-        
+
 //       }
 //       data.push(rowObject);
 //     }
@@ -154,22 +154,33 @@
 
 // export default CitySocietySelector;
 
-
-
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import './App.css';
+import "./App.css";
 import ChartComponent from "./ChartComponent";
 
 const CitySocietySelector = () => {
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCityRatings, setSelectedCityRatings] = useState({});
+  const [panIndiaRatings, setPanIndiaRatings] = useState({});
   const [selectedSociety, setSelectedSociety] = useState("");
   const [csvData, setCsvData] = useState([]);
   const [cityList, setCityList] = useState([]);
   const [societyList, setSocietyList] = useState([]);
-  
+
+  function calculateMeanRatings(array, key) {
+    if (array.length === 0) {
+      return 0; // Return 0 if there are no ratings
+    }
+
+    const sumOfRatings = array.reduce((total, item) => {
+      if (item[key]) return total + parseFloat(item[key]);
+      else return total + 0;
+    }, 0);
+    const meanRating = sumOfRatings / array.length;
+
+    return parseFloat(meanRating?.toFixed(1));
+  }
 
   function getUniqueCityNames(data) {
     const citySet = new Set();
@@ -180,11 +191,24 @@ const CitySocietySelector = () => {
     });
     return Array.from(citySet);
   }
-  
 
   const getSurvayDataByCity = (selectedCity) => {
     const filteredData = csvData.filter((entry) => entry.City === selectedCity);
     setSocietyList(filteredData);
+    let ratings = {
+      Connectivity: calculateMeanRatings(filteredData, "Connectivity Rating"),
+      Maintenance: calculateMeanRatings(filteredData, "Maintenance Rating"),
+      Construction: calculateMeanRatings(filteredData, "Construction Rating"),
+      Amenities: calculateMeanRatings(
+        filteredData,
+        "Amenities & Livability Rating"
+      ),
+      Friendliness: calculateMeanRatings(
+        filteredData,
+        "People Friendliness Rating"
+      ),
+    };
+    setSelectedCityRatings(ratings);
   };
 
   const fetchCSVData = () => {
@@ -196,7 +220,29 @@ const CitySocietySelector = () => {
       .then((response) => {
         const parsedCsvData = parseCSV(response.data);
         const uniqueCities = getUniqueCityNames(parsedCsvData);
-        
+        let ratings = {
+          Connectivity: calculateMeanRatings(
+            parsedCsvData,
+            "Connectivity Rating"
+          ),
+          Maintenance: calculateMeanRatings(
+            parsedCsvData,
+            "Maintenance Rating"
+          ),
+          Construction: calculateMeanRatings(
+            parsedCsvData,
+            "Construction Rating"
+          ),
+          Amenities: calculateMeanRatings(
+            parsedCsvData,
+            "Amenities & Livability Rating"
+          ),
+          Friendliness: calculateMeanRatings(
+            parsedCsvData,
+            "People Friendliness Rating"
+          ),
+        };
+        setPanIndiaRatings(ratings);
         setCityList(uniqueCities);
         setCsvData(parsedCsvData);
       })
@@ -220,11 +266,12 @@ const CitySocietySelector = () => {
         Maintenance: parseFloat(rowObject["Maintenance Rating"]),
         Construction: parseFloat(rowObject["Construction Rating"]),
         Amenities: parseFloat(rowObject["Amenities & Livability Rating"]),
-        Friendliness: parseFloat(rowObject["People Friendliness Rating"])
+        Friendliness: parseFloat(rowObject["People Friendliness Rating"]),
       };
-     
+
       rowObject.ratings = ratings;
-      data.push(rowObject);
+      if (rowObject?.Survey_ID !== "" && rowObject?.Survey_ID !== undefined)
+        data.push(rowObject);
     }
     return data;
   }
@@ -235,13 +282,14 @@ const CitySocietySelector = () => {
     setSelectedSociety("");
   };
 
-  const handleSocietyChange = (data)=>{
-    setSelectedSociety(data?.target?.value)
-  }
+  const handleSocietyChange = (data) => {
+    setSelectedSociety(data?.target?.value);
+  };
 
   useEffect(() => {
     fetchCSVData();
   }, []);
+  console.log(panIndiaRatings);
 
   return (
     <div>
@@ -259,8 +307,8 @@ const CitySocietySelector = () => {
           <option value="">Select Society</option>
           {societyList.length &&
             societyList?.map((society, index) => (
-              <option key={index} value={society['Society Name']}>
-                {society['Society Name']}
+              <option key={index} value={society["Society Name"]}>
+                {society["Society Name"]}
               </option>
             ))}
         </select>
@@ -269,40 +317,38 @@ const CitySocietySelector = () => {
       {selectedSociety && <p>Selected Society: {selectedSociety}</p>} */}
       {selectedCity && selectedSociety && (
         <>
-          <div className="container" style={{paddingTop:'20px'}}>
-  <div className="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-        <th>Selected Society</th>
-          <th>Selected City</th>
-          <th>Country</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-         <td>{selectedSociety}</td>
-          <td>{selectedCity}</td>
-          <td>PAN India</td>
-        </tr>
-        <tr>
-          <td>17</td>
-          <td>1259</td>
-          <td>9870</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <div className="chart-wrapper">
-    <ChartComponent
-      selectedCity={selectedCity}
-      selectedSociety={selectedSociety}
-      csvData={csvData}
-    />
-  </div>
-</div>
-
-          
+          <div className="container" style={{ paddingTop: "20px" }}>
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Selected Society</th>
+                    <th>Selected City</th>
+                    <th>Country</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{selectedSociety}</td>
+                    <td>{selectedCity}</td>
+                    <td>PAN India</td>
+                  </tr>
+                  <tr>
+                    <td>17</td>
+                    <td>1259</td>
+                    <td>9870</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="chart-wrapper">
+              <ChartComponent
+                selectedCity={selectedCity}
+                selectedSociety={selectedSociety}
+                csvData={csvData}
+              />
+            </div>
+          </div>
         </>
       )}
     </div>
@@ -310,5 +356,3 @@ const CitySocietySelector = () => {
 };
 
 export default CitySocietySelector;
-
-
