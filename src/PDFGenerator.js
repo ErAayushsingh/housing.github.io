@@ -32,10 +32,7 @@ class PDFGenerator extends React.Component {
                 <h2 style={{ color:'red' }}>Neighborhood Living Standards</h2>
                 <h3>Your Society vs City vs PAN India</h3>
                 <CitySocietySelector/>
-         </div>  
-         <div style={{ paddingTop:'20px' }}>
-             <ScrollableTableComponent /> 
-         </div> 
+          </div>   
       </div>
     </div>
     );

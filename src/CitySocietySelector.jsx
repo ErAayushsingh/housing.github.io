@@ -4,6 +4,7 @@ import './App.css';
 import ChartComponent from "./ChartComponent";
 import Select from 'react-select';
 import { fetchTSVData } from "./service";
+import ScrollableTableComponent from "./ScrollableTableComponent";
 
 const CitySocietySelector = () => {
   const [selectedCity, setSelectedCity] = useState("");
@@ -15,6 +16,7 @@ const CitySocietySelector = () => {
   const [societyList, setSocietyList] = useState([]);
   const [counts, setCounts] = useState({ city: 0, society: 0 });
   const [rowData, setRowData] = useState([]);
+  const [comments, setComments] = useState([]);
 
   function getUniqueCityNames(data) {
     const citySet = new Set();
@@ -51,7 +53,7 @@ const CitySocietySelector = () => {
 
   const fetchCSVData = () => {
     const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgI8w-NWdzdJwVdNktWKLol5ZMuYGJjcy4UqyGDB59l6Ua4lWUPXq5dLCiSFc8ub7n9o93MPQhgRsq/pub?gid=1450461553&single=true&output=csv";
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgI8w-NWdzdJwVdNktWKLol5ZMuYGJjcy4UqyGDB59l6Ua4lWUPXq5dLCiSFc8ub7n9o93MPQhgRsq/pub?gid=1450461553&single=true&output=tsv";
 
     axios
       .get(csvUrl)
@@ -89,10 +91,10 @@ const CitySocietySelector = () => {
 
   const parseCSV = (csvText) => {
     const rows = csvText.split(/\r?\n/);
-    const headers = rows[0].split(",");
+    const headers = rows[0].split("\t");
     const data = [];
     for (let i = 1; i < rows.length; i++) {
-      const rowData = rows[i].split(",");
+      const rowData = rows[i].split("\t");
       const rowObject = {};
       for (let j = 0; j < headers.length; j++) {
         rowObject[headers[j]] = rowData[j];
@@ -141,8 +143,9 @@ const CitySocietySelector = () => {
     setSelectedSociety(society?.value);
     let data = rowData.filter(
       (entry) => entry["Society Name"] === society?.value
-    ).length;
-    setCounts({ ...counts, society: data });
+    );
+    setComments(data);
+    setCounts({ ...counts, society: data.length });
   };
 
   return (
@@ -203,6 +206,9 @@ const CitySocietySelector = () => {
           </div>
         </>
       )}
+      <div style={{ paddingTop: "20px" }}>
+        <ScrollableTableComponent comments={comments} />
+      </div>
     </div>
   );
 };
