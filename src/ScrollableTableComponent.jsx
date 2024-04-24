@@ -1,7 +1,6 @@
 import React from 'react';
 import './Scroll.css'
 
-
 const ScrollableTableComponent = ({ comments }) => {
   return (
     <div className="Tabcontainer">
@@ -14,15 +13,13 @@ const ScrollableTableComponent = ({ comments }) => {
             </tr>
           </thead>
           <tbody>
-            {comments.length &&
-              comments?.map((item, key) => {
-                return (
-                  <tr key={key}>
-                    <td>{item["Like Detailed Comments"]}</td>
-                    <td>{item["Dislike Detailed Comments"]}</td>
-                  </tr>
-                );
-              })}
+            {comments?.length > 0 && // Check if comments array has items
+              comments.map((item, index) => (
+                <tr key={index}>
+                  <td>{item["Like Detailed Comments"]}</td>
+                  <td>{item["Dislike Detailed Comments"]}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
